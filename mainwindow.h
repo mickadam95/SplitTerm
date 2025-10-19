@@ -28,6 +28,8 @@ private:
     QString currentDir;
     QStringList history;
     int historyIndex = -1;
+
+    QString pendingCommand;  // store command until placeholder updates
 };
 
 #endif // MAINWINDOW_H

@@ -13,8 +13,6 @@ public:
 
     void startShell(const QString &shellPath = "/bin/bash");
     void sendCommand(const QString &command);
-
-    // Silent command: output is only used internally (placeholder)
     void sendSilentCommand(const QString &command);
 
 signals:
@@ -30,6 +28,5 @@ private:
     int masterFd = -1;
     pid_t childPid = -1;
     QSocketNotifier *notifier = nullptr;
-
     bool silentMode = false;
 };

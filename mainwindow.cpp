@@ -37,6 +37,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(backend, &TerminalBackend::pwdOutput, this, [this](const QString &dir){
         currentDir = dir;
         updatePrompt();
+
+        // If there’s a pending command, send it now that placeholder is updated
+        if(!pendingCommand.isEmpty()) {
+            outputBox->appendPlainText(QString("[%1] $").arg(currentDir));
+            backend->sendCommand(pendingCommand);
+            pendingCommand.clear();
+        }
     });
 
     connect(inputBox, &QLineEdit::returnPressed, this, [this](){
@@ -55,16 +62,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
         // Display user-entered command with currentDir
         outputBox->appendPlainText(QString("[%1] $").arg(currentDir));
-        outputBox->verticalScrollBar()->setValue(outputBox->verticalScrollBar()->maximum());
 
-        backend->sendCommand(cmd);
-        inputBox->clear();
-
-        // If cd command, run silent pwd to update placeholder
+        // If cd, execute it and then silently update placeholder
         if(cmd.startsWith("cd ")) {
-            backend->sendSilentCommand("pwd");
+            backend->sendCommand(cmd);        // execute cd
+            backend->sendSilentCommand("pwd"); // update placeholder asynchronously
+        } else {
+            backend->sendCommand(cmd);        // normal command
         }
+
+        inputBox->clear();
     });
+
 }
 
 MainWindow::~MainWindow() { delete backend; }
