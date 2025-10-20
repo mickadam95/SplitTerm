@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QPlainTextEdit>
 #include <QLineEdit>
+#include <QPlainTextEdit>
 #include <QStringList>
 #include "terminalbackend.h"
 
@@ -12,24 +12,23 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    explicit MainWindow(QWidget *parent = nullptr);
+    ~MainWindow() override;
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
-    void updatePrompt();
-
-    QPlainTextEdit *outputBox;
-    QLineEdit *inputBox;
-    TerminalBackend *backend;
-
+    TerminalBackend *backend = nullptr;
+    QPlainTextEdit *outputBox = nullptr;
+    QLineEdit *inputBox = nullptr;
     QString currentDir;
+
     QStringList history;
     int historyIndex = -1;
 
-    QString pendingCommand;  // store command until placeholder updates
+    void updatePrompt();
+    QString getCwdCommand() const;
 };
 
 #endif // MAINWINDOW_H
