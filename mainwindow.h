@@ -2,10 +2,12 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QStringList>
 #include "terminalbackend.h"
+
+class QTextEdit;
+class QAction;
 
 class MainWindow : public QMainWindow
 {
@@ -18,10 +20,13 @@ public:
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
+private slots:
+    void showSettingsDialog(); // Slot to open the settings window
+
 private:
     TerminalBackend *backend = nullptr;
-    QPlainTextEdit *outputBox = nullptr;
-    QLineEdit *inputBox = nullptr;
+    QTextEdit *outputBox = nullptr;      // Changed to QTextEdit for HTML
+    QPlainTextEdit *inputBox = nullptr; // For multi-line input
     QString currentDir;
 
     QStringList history;
@@ -29,6 +34,10 @@ private:
 
     void updatePrompt();
     QString getCwdCommand() const;
+
+    void handleCommand(const QString &cmd);
+
+    QAction *m_settingsAction; // Menu action for settings
 };
 
 #endif // MAINWINDOW_H

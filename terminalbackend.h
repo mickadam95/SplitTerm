@@ -5,6 +5,8 @@
 #include <QSocketNotifier>
 #include <sys/types.h>
 #include <termios.h>
+#include <QColor>
+#include <QHash>
 
 class TerminalBackend : public QObject
 {
@@ -15,11 +17,15 @@ public:
 
     void startShell(const QString &shellPath);
     void sendCommand(const QString &command);
-    void requestCwdUpdate(); // New method to request CWD via OSC 7
-    QString getCwdFromProc() const; // New method for /proc fallback
+    QString getCwdFromProc() const;
+
+public slots:
+    // Slot to be called when settings change
+    void loadColorSettings();
 
 signals:
-    void readyReadOutput(const QByteArray &data);
+    // This replaces readyReadOutput
+    void readyReadHtml(const QString &html);
     void pwdOutput(const QString &dir);
     void shellExited();
 
@@ -30,13 +36,31 @@ private:
     int masterFd = -1;
     pid_t childPid = -1;
     QSocketNotifier *notifier = nullptr;
-    QByteArray outputBuffer; // Buffer to handle multi-read output and parse OSC 7
+    QByteArray outputBuffer;
 
     void processOutputChunk(const QByteArray &data);
 
-    // OSC 7 Sequence: \033]7;file://HOSTNAME/PATH\007
+    // OSC 7 Sequence
     const QByteArray OSC7_START = "\033]7;file://";
-    const QByteArray OSC7_END = "\007"; // Bell character
+    const QByteArray OSC7_END = "\007";
+
+    // --- New ANSI Parsing Members ---
+
+    // Tracks the current style
+    QColor currentFgColor;
+    bool currentBold = false;
+
+    // Map of ANSI codes to colors (loaded from QSettings)
+    QHash<int, QColor> ansiColorMap;
+
+    // Resets style to default
+    void resetSgrState();
+
+    // Parses SGR codes (e.g., "[31;1m") and returns HTML style string
+    QString parseSgrCodes(const QStringList &codes);
+
+    // Helper to generate the current style span
+    QString getCurrentStyleHtml() const;
 };
 
 #endif // TERMINALBACKEND_H
